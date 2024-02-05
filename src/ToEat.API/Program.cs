@@ -26,10 +26,11 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddScoped<IResponseHandlingStrategy, FunctionCallStrategy>();
 builder.Services.AddScoped<IResponseHandlingStrategy, SimpleAnswerStrategy>();
 builder.Services.AddScoped<ResponseHandlingService, ResponseHandlingService>();
-builder.Services.AddScoped<ChatCompletionService>();
+builder.Services.AddScoped<GptIntegrationService>();
 builder.Services.AddScoped<IFunction, AddInventoryItemFunction>();
 builder.Services.AddScoped<FunctionRepository>();
 builder.Services.AddScoped<ConversationService>();
+builder.Services.AddScoped<ChatService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
 builder.Services.AddAuthentication(options =>
 {

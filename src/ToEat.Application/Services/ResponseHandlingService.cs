@@ -13,7 +13,7 @@ public class ResponseHandlingService
         _strategies = strategies;
     }
 
-    public async Task<IStrategyResult> HandleResponse(StrategyParameter parameter)
+    public async Task<ChatChoice> HandleResponse(StrategyParameter parameter)
     {
         ChatChoice response = parameter.GetModelResponse();
         Azure.AI.OpenAI.CompletionsFinishReason? finishReason = response.FinishReason;
@@ -21,6 +21,7 @@ public class ResponseHandlingService
         {
             throw new Exception($"No finish reason found");
         }
+        
         var strategy = _strategies.FirstOrDefault(s => s.CanHandle(finishReason.ToString()));
         
         if (strategy == null)

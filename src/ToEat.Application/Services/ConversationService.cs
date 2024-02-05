@@ -1,6 +1,5 @@
+using Azure.AI.OpenAI;
 using Microsoft.EntityFrameworkCore;
-using ToEat.Application.Strategies.Parameters;
-using ToEat.Application.Strategies.Results;
 using ToEat.Domain.Data;
 using ToEat.Domain.Models;
 
@@ -9,12 +8,11 @@ namespace ToEat.Application.Services;
 public class ConversationService
 {
     private readonly ToEatContext _context;
-    private readonly ChatCompletionService _chatCompletionService;
-    private readonly ResponseHandlingService _responseHandlingService;
-    public ConversationService(ToEatContext context, ChatCompletionService chatCompletionService, ResponseHandlingService responseHandlingService)
+    private readonly GptIntegrationService _gptIntegrationService;
+    public ConversationService(ToEatContext context, GptIntegrationService gptIntegrationService)
     {
         _context = context;
-        _chatCompletionService = chatCompletionService;
+        _gptIntegrationService = gptIntegrationService;
     }
 
     public async Task<Conversation> CreateNewConversation(int metaPromptElementId)
@@ -46,7 +44,7 @@ public class ConversationService
         return conversation;
     }
 
-    public async Task<IStrategyResult> GetAnswer(int conversationId)
+    public async Task<ChatChoice> GetAnswer(int conversationId)
     {
         var conversationWithMessages = _context.Conversations
             .Include(c => c.Messages)
@@ -55,10 +53,8 @@ public class ConversationService
         {
             return null;
         }
-        var answer = await _chatCompletionService.GetAnswer(conversationWithMessages);
-        conversationWithMessages.Messages.Add(new Message { Text = answer.ToString(), Role = "assistant" });
-        _context.SaveChanges();
-        StrategyParameter strategyParameter = new StrategyParameter(conversationWithMessages.Id, answer);
-        return await _responseHandlingService.HandleResponse(strategyParameter);
+        var answer = await _gptIntegrationService.GetAnswer(conversationWithMessages);
+
+        return answer;
     }
 }

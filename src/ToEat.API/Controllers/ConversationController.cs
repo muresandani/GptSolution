@@ -8,13 +8,14 @@ namespace ToEat.API.Controllers
     [ApiController]
     public class ConversationController : ControllerBase
     {
-        private readonly ChatCompletionService _chatService;
         private readonly ConversationService _conversationService;
 
-        public ConversationController(ChatCompletionService chatService, ConversationService conversationService)
+        private readonly ChatService _chatService;
+
+        public ConversationController(ConversationService conversationService, ChatService chatService)
         {
-            _chatService = chatService;
             _conversationService = conversationService;
+            _chatService = chatService;
         }
 
         [HttpPost("new-conversation/{metaPromptElementId}")]
@@ -34,7 +35,7 @@ namespace ToEat.API.Controllers
         [HttpPost("answer/{conversationId}")]
         public async Task<IActionResult> GetAnswer(int conversationId)
         {
-            var response = await _conversationService.GetAnswer(conversationId);
+            var response = await _chatService.GetAnswer(conversationId);
             return Ok(response);
         }
     }

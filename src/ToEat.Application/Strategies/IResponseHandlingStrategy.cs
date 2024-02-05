@@ -5,5 +5,5 @@ namespace ToEat.Application.Strategies;
 public interface IResponseHandlingStrategy
 {
     bool CanHandle(string responseType);
-    Task<IStrategyResult> Handle(IStrategyParameter response);
+    Task<ChatChoice> Handle(IStrategyParameter response);
 }

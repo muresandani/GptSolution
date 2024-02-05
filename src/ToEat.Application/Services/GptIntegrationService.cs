@@ -1,23 +1,18 @@
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text.Json;
-using System.Threading.Tasks;
 using Azure;
 using Azure.AI.OpenAI;
-using System.Text;
 
 using UserConversation = ToEat.Domain.Models.Conversation;
-using ToEat.Application.Strategies;
 using ToEat.Application.Functions;
 using Microsoft.Extensions.Configuration;
+using System.Text.Json;
 
 namespace ToEat.Application.Services;
-public class ChatCompletionService
+public class GptIntegrationService
 {
     private readonly OpenAIClient _openAIClient;
 
     private readonly FunctionRepository _functionRepository;
-    public ChatCompletionService(IConfiguration configuration, FunctionRepository functionRepository)
+    public GptIntegrationService(IConfiguration configuration, FunctionRepository functionRepository)
     {
         _openAIClient = new OpenAIClient(configuration["OpenAI:ApiKey"], new OpenAIClientOptions());
         _functionRepository = functionRepository;
@@ -65,14 +60,22 @@ public class ChatCompletionService
             {
                 messages.Add(new ChatMessage(ChatRole.Assistant, message.Text));
             }
-            if (message.Role == "function")
+            if (message.Role == "function_result")
             {
-                messages.Add(new ChatMessage(ChatRole.Function, message.Text));
+                var deserializedMessage = JsonSerializer.Deserialize<Dictionary<string, string>>(message.Text);
+                ChatMessage functionResultMessage = new ChatMessage();
+                functionResultMessage.Name = deserializedMessage["name"];
+                functionResultMessage.Role = ChatRole.Function;
+                functionResultMessage.Content = deserializedMessage["content"];
+                messages.Add(functionResultMessage);
             }
             if (message.Role == "function_call")
             {
+                var deserializedMessage = JsonSerializer.Deserialize<Dictionary<string, string>>(message.Text);
                 var functionCallMessage = new ChatMessage();
-                functionCallMessage.FunctionCall = new FunctionCall("addInventoryItem", "{\"name\": \"test\", \"quantity\": 1}");
+                functionCallMessage.Role = ChatRole.Assistant;
+                functionCallMessage.FunctionCall = new FunctionCall(deserializedMessage["name"], deserializedMessage["arguments"]);
+                
                 messages.Add(functionCallMessage);
             }
         }
